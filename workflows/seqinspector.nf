@@ -66,11 +66,15 @@ workflow SEQINSPECTOR {
     //
     // MODULE: Run FastQ Screen
     //
-    ch_databases = Channel
+    paths = Channel
         .fromList(samplesheetToList(ch_fastqscreen_databasesheet, "${projectDir}/assets/schema_database.json"))
+        .map { _meta, path -> path }
+        .collect()
+        .view()
 
     FASTQSCREEN_FASTQSCREEN (
-        ch_samplesheet.combine(ch_databases)
+        ch_samplesheet,
+        paths
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQSCREEN_FASTQSCREEN.out.txt)
     ch_versions = ch_versions.mix(FASTQSCREEN_FASTQSCREEN.out.versions.first())

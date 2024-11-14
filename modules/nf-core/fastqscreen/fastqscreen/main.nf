@@ -1,5 +1,5 @@
 process FASTQSCREEN_FASTQSCREEN {
-    tag "$meta.id | $meta2.database_name"
+    tag "$meta.id"
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
@@ -9,7 +9,8 @@ process FASTQSCREEN_FASTQSCREEN {
 
     input:
     // NOTE for meta 2 and database [[database_name,  database_notes], database_path]
-    tuple val(meta), path(reads), val(meta2), path(database)
+    tuple val(meta), path(reads)
+    path path_list
 
     output:
     tuple val(meta), path("*.txt")     , emit: txt
@@ -22,18 +23,19 @@ process FASTQSCREEN_FASTQSCREEN {
     task.ext.when == null || task.ext.when
 
     script:
+    def content = path_list.collect { path -> 
+        "DATABASE Ecoli ./${path}/genome BOWTIE2"
+    }.join('\n')
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ""
     // 'Database name','Genome path and basename','Notes'
     """
-    echo "Writing config"
-    echo "DATABASE    ${meta2.database_name}    ./${database}/genome    ${meta2.database_notes}" > fastq_screen.conf
-    echo "Wrote config"
+    echo "${content}" > fastq_screen.conf
 
     fastq_screen \\
         --conf fastq_screen.conf \\
         --threads ${task.cpus} \\
-        --aligner ${meta2.database_notes.toLowerCase()} \\
+        --aligner bowtie2 \\
         $reads \\
         $args
 
