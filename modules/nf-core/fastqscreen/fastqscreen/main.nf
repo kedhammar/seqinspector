@@ -24,7 +24,7 @@ process FASTQSCREEN_FASTQSCREEN {
 
     script:
     def content = path_list.collect { path -> 
-        "DATABASE Ecoli ./${path}/genome BOWTIE2"
+        "DATABASE Ecoli ./${path}/genome 'bowtie2'"
     }.join('\n')
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args ?: ""
@@ -35,7 +35,6 @@ process FASTQSCREEN_FASTQSCREEN {
     fastq_screen \\
         --conf fastq_screen.conf \\
         --threads ${task.cpus} \\
-        --aligner bowtie2 \\
         $reads \\
         $args
 
